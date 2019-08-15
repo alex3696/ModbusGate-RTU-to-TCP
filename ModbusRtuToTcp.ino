@@ -62,6 +62,7 @@ uint32_t gPkgQtyError=0;
 #define BUILTIN_LED 2     // ESP-12E module's onboard LED, used as status indicator
 #define BUILTIN_LED_OFF() digitalWrite(BUILTIN_LED, HIGH)
 #define BUILTIN_LED_ON()  digitalWrite(BUILTIN_LED, LOW)
+uint32_t gPreviosCycleQty = 0;
 
 void status_blink()
 {
@@ -120,6 +121,8 @@ void CRC_16(uint8_t *b, uint16_t count) {
 //----------------------------------------------------------------------
 void setup() 
 {
+	ESP.wdtEnable(3000);
+	
 	pinMode(BUILTIN_LED, OUTPUT);
 	BUILTIN_LED_OFF();
 
@@ -159,6 +162,7 @@ void setup()
 		int reconect_attempt = 10;
 		while (--reconect_attempt && WiFi.status() != WL_CONNECTED)
 		{
+			ESP.wdtFeed();
 			Serial.print("try WiFi reconect attempt ");
 			Serial.println(reconect_attempt, DEC);
 			status_blink();
@@ -215,6 +219,7 @@ void StartIpServer()
 //----------------------------------------------------------------------
 void WifiConnectReset()
 {
+	ESP.wdtFeed();
 	serverClient.stop();
 	server.stop();
 
@@ -320,16 +325,39 @@ void WifiConnect()
   
 }//void WifiConnect()
 //----------------------------------------------------------------------
+void IDLE_Blink()
+{
+	if (digitalRead(BUILTIN_LED)) //off
+	{
+		if (ESP.getCycleCount() - gPreviosCycleQty > 1E8)
+		{
+			BUILTIN_LED_ON();
+			gPreviosCycleQty = ESP.getCycleCount();
+		}
+	}
+	else // if on
+	{
+		if (ESP.getCycleCount() - gPreviosCycleQty > 1E6)
+		{
+			BUILTIN_LED_OFF();
+			gPreviosCycleQty = ESP.getCycleCount();
+		}
+	}
+}
+//----------------------------------------------------------------------
 
 void loop() {
-  WifiConnect();
-
+	ESP.wdtFeed();
+	WifiConnect();
 
 	uint16 c=0;//длина сообщения
 	switch (rsCondition) {
-	default: break;
+	default: 
+		IDLE_Blink();
+		break;
 	case 1:
 		//Поступило сообщение:
+		BUILTIN_LED_ON();
 		c = (buf[4] << 8) + buf[5];//выделяем его длину
 		CRC_16(&buf[6], c);//вычиляем контрольную сумму и добавляем ее в конец
 		Serial.write(&buf[6], c + 2);//Отправляем RTU запрос
