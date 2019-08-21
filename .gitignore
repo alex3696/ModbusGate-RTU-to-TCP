@@ -66,3 +66,6 @@ BUILD/Release/wh3.pgd
 ModbusRtuToTcp.vcxproj.filters
 ModbusRtuToTcp.vcxproj
 ModbusRtuToTcp.sln
+__vm/
+Debug/
+Release/

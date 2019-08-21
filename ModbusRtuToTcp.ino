@@ -259,7 +259,7 @@ void WifiConnectSTA()
   //for(uint32_t i=0; i< sizeof(ssid)/sizeof(char); ++i)
   {
     WiFi.begin(ssidAP.c_str(), passwordAP);
-    status_blink();
+	BUILTIN_LED_ON();
     if(WL_CONNECTED == WiFi.waitForConnectResult() )
     {
       StartIpServer();
