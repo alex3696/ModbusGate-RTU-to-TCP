@@ -345,7 +345,38 @@ void IDLE_Blink()
 	}
 }
 //----------------------------------------------------------------------
+uint16 CalcRespLen20()
+{
+	uint16 c = 0;//длина ответного сообщения (байты)
+	// sample 04 (0x04) Read Input Registers
+	//c += 1; //address code
+	//c += 1; //Function code
+	//c += 1; //Resp. data Length (Byte)
+	//c += 2; //CRC
+	//uint16_t cell_qty = __builtin_bswap16((uint16_t)buf[10]); // (buf[10] << 8) + buf[11] -- 	Quantity of Input Registers in request
+	//c += cell_qty*2; //Byte count
+	c += 5; // address code + Function code + Resp. data Length + CRC
+	const uint8_t rq_byte_qty = buf[8];// request byte count
+	// calc count sub.Req , ehere subreqest len is 7 byte
+	const uint8_t sub_req_qty = rq_byte_qty / 7;
+	c += sub_req_qty * 2;// (File Resp. length + Reference Type)* sub_req_qty
 
+		const uint16_t rq_rec_len = __builtin_bswap16((uint16_t) buf[9 + 5 + i]);
+		//c += 2; // File Resp. length + Reference Type
+		c += rq_rec_len * 2; //Record Data len
+	}
+	return c;
+}
+//----------------------------------------------------------------------
+uint16 CalcRespLen21()
+{
+	uint16 c = 0;//длина ответного сообщения (байты)
+	c += 5; // address code + Function code + Resp. data Length + CRC
+	const uint8_t rq_byte_qty = buf[8];// request byte count
+	c += rq_byte_qty;
+	return c;
+}
+//----------------------------------------------------------------------
 void loop() {
 	ESP.wdtFeed();
 	WifiConnect();
@@ -382,6 +413,8 @@ void loop() {
 		case 16://16 (0x10) Write Multiple registers
 			c = 3 + 5;
 			break;
+		case 20: c = CalcRespLen20(); break;
+		case 21:  c = CalcRespLen21(); break;
 		case 22://22 (0x16) Mask Write Register
 			c = 3 + 7;
 			break;
