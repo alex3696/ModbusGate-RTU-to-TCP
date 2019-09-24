@@ -345,6 +345,8 @@ void IDLE_Blink()
 	}
 }
 //----------------------------------------------------------------------
+#define bswap16(x) (((unsigned short)(x))<<8 | ((unsigned short)(x))>>8)
+
 uint16 CalcRespLen20()
 {
 	uint16 c = 0;//длина ответного сообщения (байты)
@@ -361,10 +363,13 @@ uint16 CalcRespLen20()
 	const uint8_t sub_req_qty = rq_byte_qty / 7;
 	c += sub_req_qty * 2;// (File Resp. length + Reference Type)* sub_req_qty
 
-		const uint16_t rq_rec_len = __builtin_bswap16((uint16_t) buf[9 + 5 + i]);
-		//c += 2; // File Resp. length + Reference Type
-		c += rq_rec_len * 2; //Record Data len
-	}
+	//const uint16_t rq_rec_len = __builtin_bswap16((uint16_t) buf[9 + 5]);
+
+	uint16_t elen = (uint16_t)buf[9 + 5];
+	const uint16_t rq_rec_len = bswap16(elen);
+
+	//c += 2; // File Resp. length + Reference Type
+	c += rq_rec_len * 2; //Record Data len
 	return c;
 }
 //----------------------------------------------------------------------
