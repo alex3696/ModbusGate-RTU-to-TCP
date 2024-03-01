@@ -1,0 +1,2 @@
+-include "D:\\Distr\\arduino\\portable\\packages\\esp8266\\hardware\\esp8266\\3.1.2\\cores\\esp8266\\CommonHFile.h"
+-include "c:\\siam\\Temp\\arduino_build_531053\\core\\ModbusRtuToTcp.ino.globals.h"
