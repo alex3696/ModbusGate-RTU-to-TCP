@@ -62,7 +62,7 @@ uint32_t gPkgQtyError=0;
 #define BUILTIN_LED 2     // ESP-12E module's onboard LED, used as status indicator
 #define BUILTIN_LED_OFF() digitalWrite(BUILTIN_LED, HIGH)
 #define BUILTIN_LED_ON()  digitalWrite(BUILTIN_LED, LOW)
-uint32_t gPreviosCycleQty = 0;
+unsigned long gPreviosCycleQty = 0;
 
 void status_blink()
 {
@@ -329,18 +329,18 @@ void IDLE_Blink()
 {
 	if (digitalRead(BUILTIN_LED)) //off
 	{
-		if (ESP.getCycleCount() - gPreviosCycleQty > 1E8)
+		if (millis() - gPreviosCycleQty > 1000)
 		{
 			BUILTIN_LED_ON();
-			gPreviosCycleQty = ESP.getCycleCount();
+			gPreviosCycleQty = millis();
 		}
 	}
 	else // if on
 	{
-		if (ESP.getCycleCount() - gPreviosCycleQty > 1E6)
+		if (millis() - gPreviosCycleQty > 10)
 		{
 			BUILTIN_LED_OFF();
-			gPreviosCycleQty = ESP.getCycleCount();
+			gPreviosCycleQty = millis();
 		}
 	}
 }
