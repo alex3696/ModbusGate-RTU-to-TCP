@@ -27,7 +27,7 @@ http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf
 #define RS_Speed 460800   //скорость соединения по Serial
 #define RS_pin 12          //выход для переключения направления передачи
 // (startBit+ DataBit+ stopBit)*maxByte* 1sec / speedBitBerSec + timeResponsePrepare 
-#define RS_Timeout  (1 + 8 + 1) * 255 * 1000 / RS_Speed + 5
+#define RS_Timeout 25 //  (1 + 8 + 1) * 255 * 1000 / RS_Speed + 5
 //----------------------------------------------------------------------
 // defaul WiFi client config
 
@@ -302,21 +302,26 @@ void WifiConnect()
         {
           if (serverClient) 
             serverClient.stop();
-          serverClient = server.available();
+          serverClient = server.accept();
+		  serverClient.keepAlive(4, 1, 3);
           return;
         }
-        WiFiClient sClient = server.available();
+        WiFiClient sClient = server.accept();
         sClient.stop();
       }
 
       /*Если сервер запущен и поступили данные*/
-      if (serverClient && serverClient.connected()) {
-        if (serverClient.available()) {
+      if (serverClient && serverClient.connected()) 
+	  {
+        if (serverClient.available() && 0==rsCondition)
+		{
           //Сперва считывается заголовок ModbusTCP, затем считывается остаток кадра в зависимости от
           //заданной в заголовке длины (-1 ,тк адрес ведомого передается в заголовке после длины):
-          if (serverClient.readBytes(buf, 7) == 7) { serverClient.readBytes(&buf[7], ((buf[4] << 8) + buf[5] - 1)); }
-          serverClient.flush();
-          rsCondition = 1;
+          if (serverClient.readBytes(buf, 7) == 7) 
+		  { 
+			  serverClient.readBytes(&buf[7], ((buf[4] << 8) + buf[5] - 1)); 
+			  rsCondition = 1;
+		  }
         }
       }
     }//if(WL_CONNECTED==WiFi.status())
