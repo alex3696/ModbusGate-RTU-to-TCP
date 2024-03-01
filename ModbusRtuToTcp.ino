@@ -25,7 +25,7 @@ http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf
 //----------------------------------------------------------------------
 // Serial config
 #define RS_Speed 460800   //скорость соединения по Serial
-#define RS_pin 2          //выход для переключения направления передачи
+#define RS_pin 12          //выход для переключения направления передачи
 // (startBit+ DataBit+ stopBit)*maxByte* 1sec / speedBitBerSec + timeResponsePrepare 
 #define RS_Timeout  (1 + 8 + 1) * 255 * 1000 / RS_Speed + 5
 //----------------------------------------------------------------------
@@ -396,8 +396,10 @@ void loop() {
 		BUILTIN_LED_ON();
 		c = (buf[4] << 8) + buf[5];//выделяем его длину
 		CRC_16(&buf[6], c);//вычиляем контрольную сумму и добавляем ее в конец
+		digitalWrite(RS_pin, 1);//переключение на передачу
 		Serial.write(&buf[6], c + 2);//Отправляем RTU запрос
-		digitalWrite(RS_pin, 1);//переключение на приём
+		Serial.flush();
+		digitalWrite(RS_pin, 0);//переключение на приём
 		rsCondition = 2;
 		break;
 	case 2:
@@ -451,10 +453,10 @@ void loop() {
 		{
 			c = Serial.readBytes(&buf[6], 255);//считывание отставшихся байт до таймаута
 			gPkgQtyError++;
+			serverClient.flush();
 			delay(1);
 		}
 		rsCondition = 0;
-		digitalWrite(RS_pin, 0);//переключение на передачу
 		break;
 	}//switch (rsCondition) {
 }
